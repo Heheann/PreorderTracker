@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#d8a1a7" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <title>Preorder Tracker</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header clay-card">
+        <h1>Preorder Tracker</h1>
+        <p>Your cozy launch & payment notebook</p>
+      </header>
+
+      <main id="app-main" class="screen-container">
+        <section id="screen-home" class="screen active"></section>
+        <section id="screen-list" class="screen"></section>
+        <section id="screen-calendar" class="screen"></section>
+        <section id="screen-add" class="screen"></section>
+      </main>
+
+      <button id="floating-add" class="floating-add clay-button" aria-label="Add product">+</button>
+
+      <nav class="bottom-nav clay-card" aria-label="Main navigation">
+        <button data-screen="home" class="nav-btn active">Home</button>
+        <button data-screen="list" class="nav-btn">List</button>
+        <button data-screen="calendar" class="nav-btn">Calendar</button>
+        <button data-screen="add" class="nav-btn">Add</button>
+      </nav>
+    </div>
+
+    <dialog id="detail-modal" class="detail-modal">
+      <article id="detail-content"></article>
+      <form method="dialog"><button class="clay-button">Close</button></form>
+    </dialog>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
