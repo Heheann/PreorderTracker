@@ -115,6 +115,25 @@ body {
   grid-template-columns: repeat(7, 1fr);
   gap: 6px;
 }
+.calendar-title-row {
+  display: grid;
+  grid-template-columns: 56px 1fr 56px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.calendar-title-row h3 {
+  text-align: center;
+}
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 6px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
 .day-cell {
   min-height: 48px;
   border-radius: 16px;
