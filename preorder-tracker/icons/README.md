@@ -1,5 +1,8 @@
-# Icon placeholders
+# Icon assets (manual upload)
 
-The files `icon-192.png` and `icon-512.png` are intentionally empty placeholders.
+PNG icons are intentionally not committed in this repository.
 
-Please replace them with valid PNG assets before deploying/installing the PWA.
+Please upload these files manually when deploying:
+
+- `icon-192.png`
+- `icon-512.png`
