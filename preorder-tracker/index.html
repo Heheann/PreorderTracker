@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#d8a1a7" />
+    <title>預購追蹤本</title>
+
+    <script>
+      window.APP_VERSION = "20260312-02";
+    </script>
+
+    <link rel="manifest" href="manifest.json?v=20260312-02" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="stylesheet" href="styles.css?v=20260312-02" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header clay-card">
+        <h1>預購追蹤本</h1>
+        <p>把開賣、訂金、尾款與出貨都記在同一本</p>
+      </header>
+
+      <main id="app-main" class="screen-container">
+        <section id="screen-home" class="screen active"></section>
+        <section id="screen-list" class="screen"></section>
+        <section id="screen-calendar" class="screen"></section>
+        <section id="screen-add" class="screen"></section>
+      </main>
+
+      <button id="floating-add" class="floating-add clay-button" aria-label="新增商品">+</button>
+
+      <nav class="bottom-nav clay-card" aria-label="主要導覽">
+        <button data-screen="home" class="nav-btn active">首頁</button>
+        <button data-screen="list" class="nav-btn">清單</button>
+        <button data-screen="calendar" class="nav-btn">月曆</button>
+        <button data-screen="add" class="nav-btn">新增</button>
+      </nav>
+    </div>
+
+    <dialog id="detail-modal" class="detail-modal">
+      <article id="detail-content"></article>
+      <form method="dialog"><button class="clay-button">關閉</button></form>
+    </dialog>
+
+    <script type="module">
+      import(`./app.js?v=${window.APP_VERSION}`);
+    </script>
+  </body>
+</html>
