@@ -97,6 +97,14 @@ function translateType(type) {
   return typeText[type] || type;
 }
 
+
+function getSafeViewMonth() {
+  if (!(state.viewMonth instanceof Date) || Number.isNaN(state.viewMonth.getTime())) {
+    state.viewMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  }
+  return state.viewMonth;
+}
+
 function getNextEvent(item) {
   const candidates = [["開賣", item.launchDate], ["尾款", item.finalDueDate], ["出貨", item.shippingDate]]
     .filter(([, d]) => d && daysUntil(d) >= -7)
@@ -203,13 +211,15 @@ function renderList() {
 }
 
 function shiftMonth(step) {
-  state.viewMonth = new Date(state.viewMonth.getFullYear(), state.viewMonth.getMonth() + step, 1);
+  const viewMonth = getSafeViewMonth();
+  state.viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + step, 1);
   renderCalendar();
 }
 
 function renderCalendar() {
-  const monthStart = new Date(state.viewMonth.getFullYear(), state.viewMonth.getMonth(), 1);
-  const monthEnd = new Date(state.viewMonth.getFullYear(), state.viewMonth.getMonth() + 1, 0);
+  const viewMonth = getSafeViewMonth();
+  const monthStart = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1);
+  const monthEnd = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 0);
   const firstWeekday = monthStart.getDay();
   const total = monthEnd.getDate();
   const eventsByDate = new Map();
@@ -229,7 +239,7 @@ function renderCalendar() {
   screens.calendar.innerHTML = `<article class="card">
     <div class="calendar-title-row">
       ${clayButton("＜", 'id="prev-month" type="button"')}
-      <h3 class="section-title">${state.viewMonth.getFullYear()}年${state.viewMonth.getMonth() + 1}月</h3>
+      <h3 class="section-title">${viewMonth.getFullYear()}年${viewMonth.getMonth() + 1}月</h3>
       ${clayButton("＞", 'id="next-month" type="button"')}
     </div>
     <div class="calendar-weekdays">${["日", "一", "二", "三", "四", "五", "六"].map((d) => `<span>${d}</span>`).join("")}</div>
@@ -242,9 +252,9 @@ function renderCalendar() {
 
   const grid = screens.calendar.querySelector("#calendar-grid");
   for (let i = 0; i < firstWeekday; i++) grid.appendChild(document.createElement("div"));
-ain
+
   for (let day = 1; day <= total; day++) {
-    const date = new Date(state.viewMonth.getFullYear(), state.viewMonth.getMonth(), day);
+    const date = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), day);
     const key = date.toDateString();
     const events = eventsByDate.get(key) || [];
     const btn = document.createElement("button");

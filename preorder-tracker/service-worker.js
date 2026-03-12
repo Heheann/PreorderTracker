@@ -1,4 +1,4 @@
-const CACHE_VERSION = "2026-03-12-01";
+const CACHE_VERSION = "2026-03-12-02";
 const CACHE_NAME = `preorder-tracker-${CACHE_VERSION}`;
 
 const APP_ASSETS = [

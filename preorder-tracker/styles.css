@@ -232,6 +232,11 @@ textarea {
   border: none;
 }
 
+.day-cell strong {
+  display: block;
+  color: var(--text);
+}
+
 .day-cell.has-events { outline: 2px solid var(--primary); }
 
 .timeline {
