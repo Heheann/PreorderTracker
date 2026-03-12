@@ -1,0 +1,274 @@
+:root {
+  --bg: #fff6f7;
+  --primary: #d8a1a7;
+  --accent: #ffb6b9;
+  --mint: #cde8e5;
+  --lavender: #e6dcf7;
+  --cream: #fffaf0;
+  --text: #4c3f45;
+  --muted: #7d6b72;
+  --radius: 24px;
+  --shadow-soft: 8px 8px 20px #e5cfd2, -8px -8px 20px #fff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 12px 12px 92px;
+  min-height: 100vh;
+  position: relative;
+}
+
+.clay-card,
+.clay-button,
+input,
+select,
+textarea {
+  border: none;
+  border-radius: var(--radius);
+  background: var(--bg);
+  box-shadow: var(--shadow-soft);
+}
+
+.app-header {
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.app-header p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.screen { display: none; gap: 12px; }
+.screen.active { display: grid; }
+
+.card {
+  padding: 14px;
+  border-radius: var(--radius);
+  background: var(--cream);
+  box-shadow: 6px 6px 14px #e8d9da;
+}
+
+.nested-card {
+  background: #fff8f9;
+  box-shadow: 4px 4px 10px #ead6d9;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.sub-title {
+  margin: 10px 0 6px;
+  font-size: 0.95rem;
+}
+
+.meta {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.empty-hint { margin: 8px 0 0; }
+
+.item-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.item-list li { margin-bottom: 6px; }
+
+.status-tag {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: var(--lavender);
+}
+
+.product-card .card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.card-title { margin: 0; }
+
+.card-subtitle { margin: 4px 0; }
+
+.event-line { margin: 8px 0 2px; }
+
+.action-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.filter-chip {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--mint);
+  border: 2px solid transparent;
+}
+
+.filter-chip.active { border-color: var(--primary); }
+
+.list-grid { display: grid; gap: 10px; }
+
+.clay-button {
+  padding: 12px 16px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.clay-button.primary { background: var(--accent); }
+
+.field { display: grid; gap: 5px; }
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.form-card { padding: 16px; display: grid; gap: 10px; }
+
+.bottom-nav {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(456px, calc(100% - 24px));
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: 8px;
+  z-index: 20;
+}
+
+.nav-btn {
+  border: none;
+  background: transparent;
+  padding: 12px 4px;
+  border-radius: 18px;
+}
+
+.nav-btn.active {
+  background: var(--mint);
+  font-weight: 700;
+}
+
+.floating-add {
+  position: fixed;
+  right: max(calc((100vw - 480px) / 2 + 18px), 18px);
+  bottom: 84px;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  z-index: 19;
+  background: var(--accent);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.calendar-title-row {
+  display: grid;
+  grid-template-columns: 56px 1fr 56px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.calendar-title-row .section-title {
+  text-align: center;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 6px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.day-cell {
+  min-height: 48px;
+  border-radius: 16px;
+  padding: 4px;
+  background: #fff;
+  font-size: 0.8rem;
+  border: none;
+}
+
+.day-cell.has-events { outline: 2px solid var(--primary); }
+
+.timeline {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.timeline li { margin-bottom: 8px; }
+
+.gallery {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin-bottom: 8px;
+}
+
+.gallery img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.detail-modal {
+  width: min(460px, 95vw);
+  border: none;
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.detail-modal::backdrop { background: #0006; }
+
+.note-box { white-space: pre-wrap; }
+
+@media (min-width: 481px) {
+  .floating-add {
+    right: calc(50vw - 240px + 18px);
+  }
+}
