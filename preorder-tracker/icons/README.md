@@ -1,8 +1,8 @@
-# Icon assets (manual upload)
+# Icon assets
 
-PNG icons are intentionally not committed in this repository.
-
-Please upload these files manually when deploying:
+These PNG files are required for PWA installability:
 
 - `icon-192.png`
 - `icon-512.png`
+
+If you want custom branding, replace them with your own PNG files using the same filenames.

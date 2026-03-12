@@ -1,4 +1,4 @@
-const CACHE_VERSION = "2026-03-11-01";
+const CACHE_VERSION = "2026-03-12-01";
 const CACHE_NAME = `preorder-tracker-${CACHE_VERSION}`;
 
 const APP_ASSETS = [
@@ -12,6 +12,7 @@ const APP_ASSETS = [
   "./components/dashboardCard.js",
   "./components/timeline.js",
   "./components/gallery.js",
+  "./components/uiKit.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
 ];
