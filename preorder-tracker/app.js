@@ -242,7 +242,7 @@ function renderCalendar() {
 
   const grid = screens.calendar.querySelector("#calendar-grid");
   for (let i = 0; i < firstWeekday; i++) grid.appendChild(document.createElement("div"));
-
+ain
   for (let day = 1; day <= total; day++) {
     const date = new Date(state.viewMonth.getFullYear(), state.viewMonth.getMonth(), day);
     const key = date.toDateString();
