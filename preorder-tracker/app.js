@@ -13,7 +13,15 @@ const screens = {
 };
 const detailModal = document.getElementById("detail-modal");
 const detailContent = document.getElementById("detail-content");
-const state = { items: [], filter: "all", editingId: null, viewMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1) };
+const floatingAdd = document.getElementById("floating-add");
+
+const state = {
+  items: [],
+  filter: "all",
+  searchTerm: "",
+  editingId: null,
+  viewMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+};
 
 const statusOptions = {
   instock: ["upcoming_sale", "on_sale", "purchased", "shipped", "received", "cancelled"],
@@ -21,8 +29,17 @@ const statusOptions = {
 };
 
 const statusText = {
-  upcoming_sale: "即將開賣", on_sale: "開賣中", purchased: "已購買", shipped: "已出貨", received: "已收貨", cancelled: "已取消",
-  ordered: "已下單", deposit_paid: "已付訂金", waiting_final_payment: "等待付款", paid: "已付清", waiting_shipment: "等待出貨",
+  upcoming_sale: "即將開賣",
+  on_sale: "開賣中",
+  purchased: "已購買",
+  shipped: "已出貨",
+  received: "已收貨",
+  cancelled: "已取消",
+  ordered: "已下單",
+  deposit_paid: "已付訂金",
+  waiting_final_payment: "等待付款",
+  paid: "已付清",
+  waiting_shipment: "等待出貨",
 };
 
 const typeText = { instock: "現貨", preorder: "預售" };
@@ -36,7 +53,6 @@ const seedItems = [
 
 function futureDate(dayOffset) { const d = new Date(); d.setDate(d.getDate() + dayOffset); return d.toISOString(); }
 const fmt = (d) => (d ? new Date(d).toLocaleDateString("zh-TW") : "未設定");
-const fmtDateTime = (d) => (d ? new Date(d).toLocaleString("zh-TW") : "未設定");
 const daysUntil = (d) => (!d ? null : Math.ceil((new Date(d) - new Date()) / 86400000));
 const daysText = (days) => (days === null ? "未設定" : days < 0 ? `逾期 ${Math.abs(days)} 天` : days === 0 ? "今天" : `還有 ${days} 天`);
 const translateStatus = (s) => statusText[s] || s;
@@ -71,29 +87,57 @@ function mountNav() {
       switchScreen(btn.dataset.screen);
     };
   });
-  document.getElementById("floating-add").onclick = () => switchScreen("add");
+  floatingAdd.onclick = () => switchScreen("add");
 }
 
 function switchScreen(name) {
   Object.entries(screens).forEach(([k, v]) => v.classList.toggle("active", k === name));
+  floatingAdd.classList.toggle("hidden", name === "add");
   if (name === "add") renderAddEdit(state.editingId ? state.items.find((i) => i.id === state.editingId) : null);
 }
 
 function filterItems(items) {
-  if (state.filter === "all") return items;
-  if (state.filter === "pending") return items.filter((i) => !["cancelled", "received"].includes(i.status));
-  if (state.filter === "completed") return items.filter((i) => ["cancelled", "received"].includes(i.status));
-  return items.filter((i) => i.type === state.filter);
+  let filtered = items;
+  if (state.filter !== "all") {
+    if (state.filter === "pending") filtered = filtered.filter((i) => !["cancelled", "received"].includes(i.status));
+    else if (state.filter === "completed") filtered = filtered.filter((i) => ["cancelled", "received"].includes(i.status));
+    else if (state.filter === "shipsoon") filtered = filtered.filter((i) => i.shippingDate && daysUntil(i.shippingDate) <= 7 && daysUntil(i.shippingDate) >= 0);
+    else if (state.filter === "waitingpay") filtered = filtered.filter((i) => ["waiting_final_payment", "ordered"].includes(i.status));
+    else filtered = filtered.filter((i) => i.type === state.filter);
+  }
+
+  if (state.searchTerm.trim()) {
+    const q = state.searchTerm.trim().toLowerCase();
+    filtered = filtered.filter((i) => `${i.title} ${i.store}`.toLowerCase().includes(q));
+  }
+
+  return filtered;
+}
+
+function goListWithFilter(filter) {
+  state.filter = filter;
+  document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+  document.querySelector('.nav-btn[data-screen="list"]').classList.add("active");
+  switchScreen("list");
+  renderList();
+}
+
+function renderHomeProductList(items) {
+  if (!items.length) return '<p class="meta">目前沒有商品。</p>';
+  return `<div class="home-product-list">${items
+    .map((i) => `<button class="home-product-item" data-id="${i.id}"><span class="left">${i.emoji || "📦"} ${i.title}</span><span class="status-mini">${translateStatus(i.status)}</span></button>`)
+    .join("")}</div>`;
 }
 
 function renderDashboard() {
   const pending = state.items.filter((i) => !["received", "cancelled"].includes(i.status)).length;
   const waitingPay = state.items.filter((i) => ["waiting_final_payment", "ordered"].includes(i.status)).length;
-  const shipSoon = state.items.filter((i) => i.shippingDate && daysUntil(i.shippingDate) !== null && daysUntil(i.shippingDate) <= 7 && daysUntil(i.shippingDate) >= 0).length;
+  const shipSoon = state.items.filter((i) => i.shippingDate && daysUntil(i.shippingDate) <= 7 && daysUntil(i.shippingDate) >= 0).length;
   const total = state.items.reduce((sum, i) => sum + Number(i.finalAmount || 0), 0);
 
-  const launchSoon = state.items.map((i) => ({ ...i, eventLabel: "開賣", date: i.launchDate })).filter((i) => i.date).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,2);
-  const paySoon = state.items.map((i) => ({ ...i, eventLabel: "尾款", date: i.finalDueDate })).filter((i) => i.date).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,2);
+  const launchSoon = state.items.map((i) => ({ ...i, eventLabel: "開賣", date: i.launchDate })).filter((i) => i.date).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 4);
+  const paySoon = state.items.map((i) => ({ ...i, eventLabel: "尾款", date: i.finalDueDate })).filter((i) => i.date).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 4);
+  const shipSoonItems = state.items.map((i) => ({ ...i, eventLabel: "出貨", date: i.shippingDate })).filter((i) => i.date).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 4);
 
   screens.home.innerHTML = `
     <header class="page-title">
@@ -102,39 +146,47 @@ function renderDashboard() {
       <button class="icon-bell">🔔</button>
     </header>
     <section class="stat-grid">
-      <article class="stat-card pink"><h3>${pending}<small>件</small></h3><p>追蹤中</p></article>
-      <article class="stat-card orange"><h3>${waitingPay}<small>件</small></h3><p>等待付款</p></article>
-      <article class="stat-card mint"><h3>${shipSoon}<small>件</small></h3><p>即將出貨</p></article>
+      <button class="stat-card pink" data-jump="pending"><h3>${pending}<small>件</small></h3><p>追蹤中</p></button>
+      <button class="stat-card orange" data-jump="waitingpay"><h3>${waitingPay}<small>件</small></h3><p>等待付款</p></button>
+      <button class="stat-card mint" data-jump="shipsoon"><h3>${shipSoon}<small>件</small></h3><p>即將出貨</p></button>
       <article class="stat-card purple"><h3>$${(total / 1000).toFixed(1)}k</h3><p>總金額</p></article>
     </section>
-    <section class="section-block">
-      <h3>🔥 即將開賣</h3>
-      <div id="home-launch"></div>
-    </section>
-    <section class="section-block">
-      <h3>💰 尾款提醒</h3>
-      <div id="home-pay"></div>
-    </section>
+    <section class="section-block"><h3>🔥 即將開賣</h3><div id="home-launch"></div></section>
+    <section class="section-block"><h3>💰 尾款提醒</h3><div id="home-pay"></div></section>
+    <section class="section-block"><h3>📦 即將出貨</h3><div id="home-ship"></div></section>
+    <section class="section-block"><h3>🛍️ 全部商品</h3><div id="home-all">${renderHomeProductList(state.items)}</div></section>
   `;
 
-  const launchWrap = screens.home.querySelector("#home-launch");
-  const payWrap = screens.home.querySelector("#home-pay");
-  launchWrap.appendChild(DashboardCard("", launchSoon.map((i) => ({ title: i.title, eventLabel: i.eventLabel, dateLabel: fmt(i.date), countdown: daysText(daysUntil(i.date)) }))));
-  payWrap.appendChild(DashboardCard("", paySoon.map((i) => ({ title: i.title, eventLabel: i.eventLabel, dateLabel: fmt(i.date), countdown: daysText(daysUntil(i.date)) }))));
+  screens.home.querySelectorAll(".stat-card[data-jump]").forEach((btn) => (btn.onclick = () => goListWithFilter(btn.dataset.jump)));
+  screens.home.querySelectorAll(".home-product-item").forEach((btn) => (btn.onclick = () => openDetail(btn.dataset.id)));
+
+  const mapRows = (arr) => arr.map((i) => ({ id: i.id, title: i.title, eventLabel: i.eventLabel, dateLabel: fmt(i.date), countdown: daysText(daysUntil(i.date)) }));
+  screens.home.querySelector("#home-launch").appendChild(DashboardCard("", mapRows(launchSoon), openDetail));
+  screens.home.querySelector("#home-pay").appendChild(DashboardCard("", mapRows(paySoon), openDetail));
+  screens.home.querySelector("#home-ship").appendChild(DashboardCard("", mapRows(shipSoonItems), openDetail));
 }
 
 function renderList() {
-  const filters = [["all", "全部"], ["instock", "現貨"], ["preorder", "預售"], ["pending", "等待付款"], ["completed", "已完成"]];
+  const filters = [["all", "全部"], ["instock", "現貨"], ["preorder", "預售"], ["waitingpay", "等待付款"], ["shipsoon", "即將出貨"], ["completed", "已完成"]];
   screens.list.innerHTML = `
-    <header class="page-title list-header">
-      <h2>預購清單 👜</h2>
-      <p>共 ${state.items.length} 件商品</p>
-    </header>
-    <div class="search-box">🔍 搜尋商品名稱或商店...</div>
-    <div class="filters">${filters.map(([v, l]) => `<button class="filter-chip ${state.filter===v?"active":""}" data-filter="${v}">${l}</button>`).join("")}</div>
+    <header class="page-title list-header"><h2>預購清單 👜</h2><p>共 ${state.items.length} 件商品</p></header>
+    <input id="search-input" class="search-box" placeholder="搜尋商品名稱或商店..." value="${state.searchTerm}" />
+    <div class="filters">${filters.map(([v, l]) => `<button class="filter-chip ${state.filter === v ? "active" : ""}" data-filter="${v}">${l}</button>`).join("")}</div>
     <div class="list-grid" id="list-grid"></div>
   `;
-  screens.list.querySelectorAll(".filter-chip").forEach((c) => (c.onclick = () => { state.filter = c.dataset.filter; renderList(); }));
+
+  screens.list.querySelector("#search-input").oninput = (e) => {
+    state.searchTerm = e.target.value;
+    renderList();
+  };
+
+  screens.list.querySelectorAll(".filter-chip").forEach((c) => {
+    c.onclick = () => {
+      state.filter = c.dataset.filter;
+      renderList();
+    };
+  });
+
   const grid = screens.list.querySelector("#list-grid");
   filterItems(state.items).forEach((item) => grid.appendChild(ProductCard(item, getNextEvent(item), openDetail, deleteItem, translateType, translateStatus)));
 }
@@ -166,13 +218,14 @@ function renderCalendar() {
   screens.calendar.innerHTML = `
     <header class="page-title list-header"><h2>活動月曆 🗓️</h2><p>查看所有重要日期</p></header>
     <article class="calendar-panel">
-      <div class="calendar-title-row">${clayButton("‹", 'id="prev-month"')}<h3>${vm.getMonth()+1}月 <small>${vm.getFullYear()} 年</small></h3>${clayButton("›", 'id="next-month"')}</div>
-      <div class="calendar-weekdays">${["日","一","二","三","四","五","六"].map((d)=>`<span>${d}</span>`).join("")}</div>
+      <div class="calendar-title-row">${clayButton("‹", 'id="prev-month"')}<h3>${vm.getMonth() + 1}月 <small>${vm.getFullYear()} 年</small></h3>${clayButton("›", 'id="next-month"')}</div>
+      <div class="calendar-weekdays">${["日", "一", "二", "三", "四", "五", "六"].map((d) => `<span>${d}</span>`).join("")}</div>
       <div class="calendar-grid" id="calendar-grid"></div>
     </article>
     <div class="legend">🔥 開賣　💰 尾款　📦 出貨</div>
     <section id="calendar-events" class="event-feed card"><p class="meta">點選日期查看事件。</p></section>
   `;
+
   screens.calendar.querySelector("#prev-month").onclick = () => shiftMonth(-1);
   screens.calendar.querySelector("#next-month").onclick = () => shiftMonth(1);
 
@@ -196,7 +249,7 @@ function renderCalendarEvents(date, events) {
     box.innerHTML = `<h4>${date.toLocaleDateString("zh-TW")}</h4><p class="meta">本日沒有活動</p>`;
     return;
   }
-  box.innerHTML = `<h4>${date.toLocaleDateString("zh-TW")}</h4><ul class="item-list">${events.map((e)=>`<li>${e.icon} ${e.title} · ${e.label}</li>`).join("")}</ul>`;
+  box.innerHTML = `<h4>${date.toLocaleDateString("zh-TW")}</h4><ul class="item-list">${events.map((e) => `<li>${e.icon} ${e.title} · ${e.label}</li>`).join("")}</ul>`;
 }
 
 function field(name, label, value, required = false, type = "text") {
@@ -207,11 +260,11 @@ function field(name, label, value, required = false, type = "text") {
 function renderAddEdit(item = null) {
   const isEdit = Boolean(item);
   const emoji = item?.emoji || emojiChoices[0];
-  const typeOptions = [["instock", "公仔"], ["preorder", "預售"]].map(([v,l]) => `<option ${item?.type===v?"selected":""} value="${v}">${l}</option>`).join("");
+  const typeOptions = [["instock", "公仔"], ["preorder", "預售"]].map(([v, l]) => `<option ${item?.type === v ? "selected" : ""} value="${v}">${l}</option>`).join("");
 
   screens.add.innerHTML = `
     <header class="page-title add-header"><h2>✨ ${isEdit ? "編輯商品" : "新增商品"}</h2></header>
-    <section class="card emoji-pick"><label>選擇圖示</label><div class="emoji-row">${emojiChoices.map((e)=>`<button type="button" class="emoji-btn ${emoji===e?"active":""}" data-emoji="${e}">${e}</button>`).join("")}</div></section>
+    <section class="card emoji-pick"><label>選擇圖示</label><div class="emoji-row">${emojiChoices.map((e) => `<button type="button" class="emoji-btn ${emoji === e ? "active" : ""}" data-emoji="${e}">${e}</button>`).join("")}</div></section>
     <form id="item-form" class="stack-form">
       <section class="card form-section">
         <h3>📋 基本資料</h3>
@@ -241,17 +294,17 @@ function renderAddEdit(item = null) {
   const typeEl = document.getElementById("type");
   const statusEl = document.getElementById("status");
   const syncStatus = () => {
-    statusEl.innerHTML = statusOptions[typeEl.value].map((s) => `<option ${item?.status===s?"selected":""} value="${s}">${translateStatus(s)}</option>`).join("");
+    statusEl.innerHTML = statusOptions[typeEl.value].map((s) => `<option ${item?.status === s ? "selected" : ""} value="${s}">${translateStatus(s)}</option>`).join("");
   };
   syncStatus();
   typeEl.onchange = syncStatus;
 
   let selectedEmoji = emoji;
-  screens.add.querySelectorAll('.emoji-btn').forEach((btn) => {
+  screens.add.querySelectorAll(".emoji-btn").forEach((btn) => {
     btn.onclick = () => {
       selectedEmoji = btn.dataset.emoji;
-      screens.add.querySelectorAll('.emoji-btn').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
+      screens.add.querySelectorAll(".emoji-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
     };
   });
 
@@ -304,8 +357,18 @@ function openDetail(id) {
     <h4>備註</h4><p class="note-box">${item.notes || "-"}</p>
     ${actionRow([clayButton("編輯", 'id="edit-item"'), clayButton("刪除", 'id="delete-item"')])}
   `;
-  detailContent.querySelector("#edit-item").onclick = () => { detailModal.close(); state.editingId = id; switchScreen("add"); };
-  detailContent.querySelector("#delete-item").onclick = async () => { detailModal.close(); await deleteItem(id); };
+
+  detailContent.querySelector("#edit-item").onclick = () => {
+    detailModal.close();
+    state.editingId = id;
+    switchScreen("add");
+  };
+
+  detailContent.querySelector("#delete-item").onclick = async () => {
+    detailModal.close();
+    await deleteItem(id);
+  };
+
   detailModal.showModal();
 }
 

@@ -33,6 +33,7 @@ body {
   border-radius: 36px 36px 0 0;
   padding: 8px 14px 98px;
   position: relative;
+  overflow-x: hidden;
 }
 
 .top-notch {
@@ -55,7 +56,7 @@ body {
 .page-title p { margin: 0; color: var(--muted); font-weight: 700; }
 .page-title h2 { margin: 0; font-size: 2rem; line-height: 1.1; }
 .list-header h2,
-.add-header h2 { font-size: 2.5rem; }
+.add-header h2 { font-size: 2.2rem; }
 .icon-bell {
   position: absolute;
   right: 4px;
@@ -78,6 +79,8 @@ body {
   padding: 14px;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
+  border: none;
+  text-align: left;
 }
 .stat-card h3 { margin: 0; font-size: 2rem; }
 .stat-card h3 small { font-size: 1rem; margin-left: 2px; }
@@ -91,6 +94,27 @@ body {
   margin: 4px 2px 2px;
   font-size: 1.45rem;
 }
+.home-product-list { display:grid; gap:10px; }
+.home-product-item {
+  border:none;
+  border-radius:16px;
+  background:#fff;
+  box-shadow: var(--shadow);
+  padding: 12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  color: var(--text);
+  font-weight:800;
+}
+.home-product-item .left {
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-align:left;
+  max-width:70%;
+}
+.status-mini { color:#8f7cae; font-size:0.82rem; }
 .reminder-list { display: grid; gap: 10px; }
 .reminder-item {
   background: #f4f5f7;
@@ -117,12 +141,16 @@ body {
 }
 
 .search-box {
+  width: 100%;
   padding: 14px;
   border-radius: 16px;
   background: #fff;
-  color: #b7afc9;
+  color: #7f7897;
   box-shadow: var(--shadow);
+  border: none;
+  font: inherit;
 }
+.search-box::placeholder { color: #b7afc9; }
 .filters {
   display: flex;
   gap: 8px;
@@ -267,6 +295,7 @@ body {
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
+.two-col > .field { min-width: 0; }
 .sticky-actions {
   position: sticky;
   bottom: 82px;
@@ -338,3 +367,5 @@ body {
 @media (min-width: 481px) {
   .floating-add { right: calc(50vw - 240px + 22px); }
 }
+
+.floating-add.hidden { display:none; }
