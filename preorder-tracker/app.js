@@ -13,12 +13,7 @@ const screens = {
 };
 const detailModal = document.getElementById("detail-modal");
 const detailContent = document.getElementById("detail-content");
-const state = {
-  items: [],
-  filter: "all",
-  editingId: null,
-  viewMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-};
+const state = { items: [], filter: "all", editingId: null, viewMonth: new Date(new Date().getFullYear(), new Date().getMonth(), 1) };
 
 const statusOptions = {
   instock: ["upcoming_sale", "on_sale", "purchased", "shipped", "received", "cancelled"],
@@ -26,77 +21,26 @@ const statusOptions = {
 };
 
 const statusText = {
-  upcoming_sale: "即將開賣",
-  on_sale: "開賣中",
-  purchased: "已購買",
-  shipped: "已出貨",
-  received: "已收貨",
-  cancelled: "已取消",
-  ordered: "已下單",
-  deposit_paid: "已付訂金",
-  waiting_final_payment: "等待尾款",
-  paid: "已付清",
-  waiting_shipment: "等待出貨",
+  upcoming_sale: "即將開賣", on_sale: "開賣中", purchased: "已購買", shipped: "已出貨", received: "已收貨", cancelled: "已取消",
+  ordered: "已下單", deposit_paid: "已付訂金", waiting_final_payment: "等待付款", paid: "已付清", waiting_shipment: "等待出貨",
 };
 
-const typeText = { instock: "現貨", preorder: "預購" };
+const typeText = { instock: "現貨", preorder: "預售" };
+const emojiChoices = ["💙", "💜", "🩷", "❤️", "💚", "💛", "🔥", "⭐", "🎁", "🦋", "🌸", "🐱", "👗", "⚔️"];
 
 const seedItems = [
-  {
-    id: crypto.randomUUID(),
-    title: "月兔模型",
-    store: "KawaiiMart",
-    type: "preorder",
-    status: "waiting_final_payment",
-    launchDate: futureDate(3),
-    purchaseDate: futureDate(-2),
-    depositAmount: 20,
-    finalAmount: 85,
-    finalDueDate: futureDate(6),
-    shippingDate: futureDate(22),
-    url: "https://example.com/moon-bunny",
-    images: [],
-    notes: "記得確認特典明信片。",
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: crypto.randomUUID(),
-    title: "薄荷鍵盤",
-    store: "Daily Desk",
-    type: "instock",
-    status: "on_sale",
-    launchDate: futureDate(1),
-    purchaseDate: "",
-    depositAmount: 0,
-    finalAmount: 129,
-    finalDueDate: "",
-    shippingDate: futureDate(8),
-    url: "https://example.com/mint-keyboard",
-    images: [],
-    notes: "可套用折扣碼。",
-    createdAt: new Date().toISOString(),
-  },
+  { id: crypto.randomUUID(), title: "初音未來 15th Anniversary Figure", store: "Good Smile Company", type: "preorder", status: "waiting_final_payment", launchDate: futureDate(-10), purchaseDate: futureDate(-14), depositAmount: 1200, finalAmount: 5800, finalDueDate: futureDate(13), shippingDate: futureDate(26), url: "https://example.com/miku", images: [], notes: "含特典。", createdAt: new Date().toISOString(), emoji: "💙" },
+  { id: crypto.randomUUID(), title: "咒術迴戰 五条悟 1/7 比例像", store: "Aniplex", type: "preorder", status: "ordered", launchDate: futureDate(-3), purchaseDate: futureDate(-2), depositAmount: 1000, finalAmount: 8800, finalDueDate: futureDate(19), shippingDate: futureDate(40), url: "https://example.com/gojo", images: [], notes: "尾款到期提醒。", createdAt: new Date().toISOString(), emoji: "🌌" },
+  { id: crypto.randomUUID(), title: "鬼滅之刃 竈門炭治郎 全集結組", store: "MegaHouse", type: "instock", status: "waiting_shipment", launchDate: futureDate(-7), purchaseDate: futureDate(-6), depositAmount: 0, finalAmount: 4200, finalDueDate: "", shippingDate: futureDate(8), url: "https://example.com/tanjiro", images: [], notes: "盡快出貨。", createdAt: new Date().toISOString(), emoji: "🔥" },
 ];
 
-function futureDate(dayOffset) {
-  const d = new Date();
-  d.setDate(d.getDate() + dayOffset);
-  return d.toISOString();
-}
-function daysUntil(dateString) {
-  if (!dateString) return null;
-  return Math.ceil((new Date(dateString) - new Date()) / 86400000);
-}
-function fmt(dateString) {
-  return dateString ? new Date(dateString).toLocaleString("zh-TW") : "未設定";
-}
-function translateStatus(status) {
-  return statusText[status] || status;
-}
-function translateType(type) {
-  return typeText[type] || type;
-}
-
+function futureDate(dayOffset) { const d = new Date(); d.setDate(d.getDate() + dayOffset); return d.toISOString(); }
+const fmt = (d) => (d ? new Date(d).toLocaleDateString("zh-TW") : "未設定");
+const fmtDateTime = (d) => (d ? new Date(d).toLocaleString("zh-TW") : "未設定");
+const daysUntil = (d) => (!d ? null : Math.ceil((new Date(d) - new Date()) / 86400000));
+const daysText = (days) => (days === null ? "未設定" : days < 0 ? `逾期 ${Math.abs(days)} 天` : days === 0 ? "今天" : `還有 ${days} 天`);
+const translateStatus = (s) => statusText[s] || s;
+const translateType = (t) => typeText[t] || t;
 
 function getSafeViewMonth() {
   if (!(state.viewMonth instanceof Date) || Number.isNaN(state.viewMonth.getTime())) {
@@ -106,11 +50,11 @@ function getSafeViewMonth() {
 }
 
 function getNextEvent(item) {
-  const candidates = [["開賣", item.launchDate], ["尾款", item.finalDueDate], ["出貨", item.shippingDate]]
-    .filter(([, d]) => d && daysUntil(d) >= -7)
+  const events = [["開賣", item.launchDate], ["尾款", item.finalDueDate], ["出貨", item.shippingDate]]
+    .filter(([, d]) => d)
     .sort((a, b) => new Date(a[1]) - new Date(b[1]));
-  const picked = candidates[0] || ["近期無事件", ""];
-  return { label: picked[0], dateLabel: fmt(picked[1]), days: daysUntil(picked[1]), date: picked[1] };
+  const picked = events[0] || ["近期無事件", ""];
+  return { label: picked[0], dateLabel: fmt(picked[1]), days: daysUntil(picked[1]) };
 }
 
 async function ensureSeed() {
@@ -132,7 +76,7 @@ function mountNav() {
 
 function switchScreen(name) {
   Object.entries(screens).forEach(([k, v]) => v.classList.toggle("active", k === name));
-  if (name === "add") renderAddEdit();
+  if (name === "add") renderAddEdit(state.editingId ? state.items.find((i) => i.id === state.editingId) : null);
 }
 
 function filterItems(items) {
@@ -143,123 +87,104 @@ function filterItems(items) {
 }
 
 function renderDashboard() {
-  const wrappers = {
-    launch: state.items.map((i) => ({ ...i, eventLabel: "開賣", date: i.launchDate })).filter((i) => i.date),
-    due: state.items.map((i) => ({ ...i, eventLabel: "尾款截止", date: i.finalDueDate })).filter((i) => i.date),
-    ship: state.items
-      .filter((i) => i.status.includes("shipment") || i.status === "paid" || i.status === "shipped")
-      .map((i) => ({ ...i, eventLabel: "出貨", date: i.shippingDate })),
-    recent: [...state.items]
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .slice(0, 3)
-      .map((i) => ({ ...i, eventLabel: "新增", date: i.createdAt })),
-  };
-  screens.home.innerHTML = "";
-  const mapItems = (arr) =>
-    arr
-      .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .slice(0, 4)
-      .map((i) => ({
-        title: i.title,
-        eventLabel: i.eventLabel,
-        dateLabel: fmt(i.date),
-        countdown: daysText(daysUntil(i.date)),
-      }));
+  const pending = state.items.filter((i) => !["received", "cancelled"].includes(i.status)).length;
+  const waitingPay = state.items.filter((i) => ["waiting_final_payment", "ordered"].includes(i.status)).length;
+  const shipSoon = state.items.filter((i) => i.shippingDate && daysUntil(i.shippingDate) !== null && daysUntil(i.shippingDate) <= 7 && daysUntil(i.shippingDate) >= 0).length;
+  const total = state.items.reduce((sum, i) => sum + Number(i.finalAmount || 0), 0);
 
-  screens.home.append(
-    DashboardCard("即將開賣", mapItems(wrappers.launch)),
-    DashboardCard("尾款到期提醒", mapItems(wrappers.due)),
-    DashboardCard("等待出貨", mapItems(wrappers.ship)),
-    DashboardCard("最近新增", mapItems(wrappers.recent))
-  );
-}
+  const launchSoon = state.items.map((i) => ({ ...i, eventLabel: "開賣", date: i.launchDate })).filter((i) => i.date).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,2);
+  const paySoon = state.items.map((i) => ({ ...i, eventLabel: "尾款", date: i.finalDueDate })).filter((i) => i.date).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,2);
 
-function daysText(days) {
-  if (days === null) return "未設定";
-  if (days < 0) return `${Math.abs(days)} 天前`;
-  if (days === 0) return "今天";
-  return `${days} 天`;
+  screens.home.innerHTML = `
+    <header class="page-title">
+      <p>哈囉 👋</p>
+      <h2>我的預購追蹤</h2>
+      <button class="icon-bell">🔔</button>
+    </header>
+    <section class="stat-grid">
+      <article class="stat-card pink"><h3>${pending}<small>件</small></h3><p>追蹤中</p></article>
+      <article class="stat-card orange"><h3>${waitingPay}<small>件</small></h3><p>等待付款</p></article>
+      <article class="stat-card mint"><h3>${shipSoon}<small>件</small></h3><p>即將出貨</p></article>
+      <article class="stat-card purple"><h3>$${(total / 1000).toFixed(1)}k</h3><p>總金額</p></article>
+    </section>
+    <section class="section-block">
+      <h3>🔥 即將開賣</h3>
+      <div id="home-launch"></div>
+    </section>
+    <section class="section-block">
+      <h3>💰 尾款提醒</h3>
+      <div id="home-pay"></div>
+    </section>
+  `;
+
+  const launchWrap = screens.home.querySelector("#home-launch");
+  const payWrap = screens.home.querySelector("#home-pay");
+  launchWrap.appendChild(DashboardCard("", launchSoon.map((i) => ({ title: i.title, eventLabel: i.eventLabel, dateLabel: fmt(i.date), countdown: daysText(daysUntil(i.date)) }))));
+  payWrap.appendChild(DashboardCard("", paySoon.map((i) => ({ title: i.title, eventLabel: i.eventLabel, dateLabel: fmt(i.date), countdown: daysText(daysUntil(i.date)) }))));
 }
 
 function renderList() {
-  const filters = [
-    ["all", "全部"],
-    ["instock", "現貨"],
-    ["preorder", "預購"],
-    ["pending", "待處理提醒"],
-    ["completed", "已完成"],
-  ];
-
-  screens.list.innerHTML = `<div class="filters">${filters
-    .map(
-      ([value, label]) =>
-        `<button class="filter-chip ${state.filter === value ? "active" : ""}" data-filter="${value}">${label}</button>`
-    )
-    .join("")}</div><div class="list-grid" id="list-grid"></div>`;
-
-  screens.list.querySelectorAll(".filter-chip").forEach((chip) => {
-    chip.onclick = () => {
-      state.filter = chip.dataset.filter;
-      renderList();
-    };
-  });
-
+  const filters = [["all", "全部"], ["instock", "現貨"], ["preorder", "預售"], ["pending", "等待付款"], ["completed", "已完成"]];
+  screens.list.innerHTML = `
+    <header class="page-title list-header">
+      <h2>預購清單 👜</h2>
+      <p>共 ${state.items.length} 件商品</p>
+    </header>
+    <div class="search-box">🔍 搜尋商品名稱或商店...</div>
+    <div class="filters">${filters.map(([v, l]) => `<button class="filter-chip ${state.filter===v?"active":""}" data-filter="${v}">${l}</button>`).join("")}</div>
+    <div class="list-grid" id="list-grid"></div>
+  `;
+  screens.list.querySelectorAll(".filter-chip").forEach((c) => (c.onclick = () => { state.filter = c.dataset.filter; renderList(); }));
   const grid = screens.list.querySelector("#list-grid");
-  filterItems(state.items).forEach((item) => {
-    grid.appendChild(ProductCard(item, getNextEvent(item), openDetail, deleteItem, translateType, translateStatus));
-  });
+  filterItems(state.items).forEach((item) => grid.appendChild(ProductCard(item, getNextEvent(item), openDetail, deleteItem, translateType, translateStatus)));
 }
 
 function shiftMonth(step) {
-  const viewMonth = getSafeViewMonth();
-  state.viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + step, 1);
+  const vm = getSafeViewMonth();
+  state.viewMonth = new Date(vm.getFullYear(), vm.getMonth() + step, 1);
   renderCalendar();
 }
 
 function renderCalendar() {
-  const viewMonth = getSafeViewMonth();
-  const monthStart = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), 1);
-  const monthEnd = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 0);
+  const vm = getSafeViewMonth();
+  const monthStart = new Date(vm.getFullYear(), vm.getMonth(), 1);
+  const monthEnd = new Date(vm.getFullYear(), vm.getMonth() + 1, 0);
   const firstWeekday = monthStart.getDay();
   const total = monthEnd.getDate();
   const eventsByDate = new Map();
 
   for (const item of state.items) {
-    [["🔥", item.launchDate, "開賣"], ["💰", item.finalDueDate, "尾款"], ["📦", item.shippingDate, "出貨"]].forEach(
-      ([icon, date, label]) => {
-        if (!date) return;
-        const key = new Date(date).toDateString();
-        const value = eventsByDate.get(key) || [];
-        value.push({ icon, label, title: item.title, itemId: item.id });
-        eventsByDate.set(key, value);
-      }
-    );
+    [["🔥", item.launchDate, "開賣"], ["💰", item.finalDueDate, "尾款"], ["📦", item.shippingDate, "出貨"]].forEach(([icon, date, label]) => {
+      if (!date) return;
+      const key = new Date(date).toDateString();
+      const list = eventsByDate.get(key) || [];
+      list.push({ icon, label, title: item.title });
+      eventsByDate.set(key, list);
+    });
   }
 
-  screens.calendar.innerHTML = `<article class="card">
-    <div class="calendar-title-row">
-      ${clayButton("＜", 'id="prev-month" type="button"')}
-      <h3 class="section-title">${viewMonth.getFullYear()}年${viewMonth.getMonth() + 1}月</h3>
-      ${clayButton("＞", 'id="next-month" type="button"')}
-    </div>
-    <div class="calendar-weekdays">${["日", "一", "二", "三", "四", "五", "六"].map((d) => `<span>${d}</span>`).join("")}</div>
-    <div class="calendar-grid" id="calendar-grid"></div>
-    <div id="calendar-events" class="card nested-card"><p class="meta">點選日期查看事件。</p></div>
-  </article>`;
-
+  screens.calendar.innerHTML = `
+    <header class="page-title list-header"><h2>活動月曆 🗓️</h2><p>查看所有重要日期</p></header>
+    <article class="calendar-panel">
+      <div class="calendar-title-row">${clayButton("‹", 'id="prev-month"')}<h3>${vm.getMonth()+1}月 <small>${vm.getFullYear()} 年</small></h3>${clayButton("›", 'id="next-month"')}</div>
+      <div class="calendar-weekdays">${["日","一","二","三","四","五","六"].map((d)=>`<span>${d}</span>`).join("")}</div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </article>
+    <div class="legend">🔥 開賣　💰 尾款　📦 出貨</div>
+    <section id="calendar-events" class="event-feed card"><p class="meta">點選日期查看事件。</p></section>
+  `;
   screens.calendar.querySelector("#prev-month").onclick = () => shiftMonth(-1);
   screens.calendar.querySelector("#next-month").onclick = () => shiftMonth(1);
 
   const grid = screens.calendar.querySelector("#calendar-grid");
   for (let i = 0; i < firstWeekday; i++) grid.appendChild(document.createElement("div"));
-
   for (let day = 1; day <= total; day++) {
-    const date = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), day);
+    const date = new Date(vm.getFullYear(), vm.getMonth(), day);
     const key = date.toDateString();
     const events = eventsByDate.get(key) || [];
     const btn = document.createElement("button");
     btn.className = `day-cell ${events.length ? "has-events" : ""}`;
-    btn.innerHTML = `<strong>${day}</strong>${events.length ? `<div>${events.slice(0, 2).map((e) => e.icon).join(" ")}</div>` : ""}`;
+    btn.innerHTML = `<strong>${day}</strong>${events[0] ? `<span>${events[0].icon}</span>` : ""}`;
     btn.onclick = () => renderCalendarEvents(date, events);
     grid.appendChild(btn);
   }
@@ -268,12 +193,10 @@ function renderCalendar() {
 function renderCalendarEvents(date, events) {
   const box = document.getElementById("calendar-events");
   if (!events.length) {
-    box.innerHTML = `<h4 class="sub-title">${date.toLocaleDateString("zh-TW")}</h4><p class="meta">這天沒有事件。</p>`;
+    box.innerHTML = `<h4>${date.toLocaleDateString("zh-TW")}</h4><p class="meta">本日沒有活動</p>`;
     return;
   }
-  box.innerHTML = `<h4 class="sub-title">${date.toLocaleDateString("zh-TW")}</h4><ul class="item-list">${events
-    .map((e) => `<li>${e.icon} <strong>${e.title}</strong> · ${e.label}</li>`)
-    .join("")}</ul>`;
+  box.innerHTML = `<h4>${date.toLocaleDateString("zh-TW")}</h4><ul class="item-list">${events.map((e)=>`<li>${e.icon} ${e.title} · ${e.label}</li>`).join("")}</ul>`;
 }
 
 function field(name, label, value, required = false, type = "text") {
@@ -283,47 +206,58 @@ function field(name, label, value, required = false, type = "text") {
 
 function renderAddEdit(item = null) {
   const isEdit = Boolean(item);
-  const typeOptions = [["instock", "現貨"], ["preorder", "預購"]]
-    .map(([value, label]) => `<option ${item?.type === value ? "selected" : ""} value="${value}">${label}</option>`)
-    .join("");
+  const emoji = item?.emoji || emojiChoices[0];
+  const typeOptions = [["instock", "公仔"], ["preorder", "預售"]].map(([v,l]) => `<option ${item?.type===v?"selected":""} value="${v}">${l}</option>`).join("");
 
-  screens.add.innerHTML = `<form id="item-form" class="card form-card">
-    <h3 class="section-title">${isEdit ? "編輯商品" : "新增商品"}</h3>
-    ${field("title", "商品名稱", item?.title || "", true)}
-    ${field("store", "商店名稱", item?.store || "")}
-    ${formSelect({ name: "type", id: "type", label: "商品類型", options: typeOptions })}
-    ${formSelect({ name: "status", id: "status", label: "狀態", options: "" })}
-    ${field("launchDate", "開賣日期時間", item?.launchDate || "", false, "datetime-local")}
-    ${field("purchaseDate", "購買日期時間", item?.purchaseDate || "", false, "datetime-local")}
-    ${field("depositAmount", "訂金", item?.depositAmount || "", false, "number")}
-    ${field("finalAmount", "尾款", item?.finalAmount || "", false, "number")}
-    ${field("finalDueDate", "尾款截止日", item?.finalDueDate || "", false, "datetime-local")}
-    ${field("shippingDate", "預計出貨日", item?.shippingDate || "", false, "datetime-local")}
-    ${field("url", "外部連結", item?.url || "", false, "url")}
-    <div class="field"><label>上傳圖片</label><input type="file" id="images" accept="image/*" multiple /></div>
-    <div class="field"><label>備註</label><textarea name="notes" rows="4">${item?.notes || ""}</textarea></div>
-    ${actionRow([
-      `<button class="clay-button primary" type="submit">${isEdit ? "儲存變更" : "儲存"}</button>`,
-      isEdit ? clayButton("取消", 'type="button" id="cancel-edit"') : "",
-    ])}
-  </form>`;
+  screens.add.innerHTML = `
+    <header class="page-title add-header"><h2>✨ ${isEdit ? "編輯商品" : "新增商品"}</h2></header>
+    <section class="card emoji-pick"><label>選擇圖示</label><div class="emoji-row">${emojiChoices.map((e)=>`<button type="button" class="emoji-btn ${emoji===e?"active":""}" data-emoji="${e}">${e}</button>`).join("")}</div></section>
+    <form id="item-form" class="stack-form">
+      <section class="card form-section">
+        <h3>📋 基本資料</h3>
+        ${field("title", "商品名稱", item?.title || "", true)}
+        ${field("store", "商店", item?.store || "")}
+        <div class="two-col">${formSelect({ name: "type", id: "type", label: "商品類型", options: typeOptions })}${formSelect({ name: "status", id: "status", label: "狀態", options: "" })}</div>
+      </section>
+      <section class="card form-section">
+        <h3>💰 日期與金額</h3>
+        ${field("launchDate", "開賣日期", item?.launchDate || "", false, "datetime-local")}
+        <div class="two-col">${field("depositAmount", "訂金 (NT$)", item?.depositAmount || "", false, "number")}${field("finalAmount", "尾款 (NT$)", item?.finalAmount || "", false, "number")}</div>
+        ${field("finalDueDate", "尾款期限", item?.finalDueDate || "", false, "datetime-local")}
+        ${field("shippingDate", "預計出貨日期", item?.shippingDate || "", false, "datetime-local")}
+      </section>
+      <section class="card form-section">
+        <h3>📝 其他資訊</h3>
+        ${field("url", "商品連結", item?.url || "", false, "url")}
+        <div class="field"><label>備註</label><textarea name="notes" rows="4">${item?.notes || ""}</textarea></div>
+      </section>
+      <div class="sticky-actions">${actionRow([
+        clayButton("取消", 'type="button" id="cancel-edit"'),
+        `<button class="clay-button primary" type="submit">${isEdit ? "儲存變更" : "儲存商品"}</button>`,
+      ])}</div>
+    </form>
+  `;
 
   const typeEl = document.getElementById("type");
   const statusEl = document.getElementById("status");
   const syncStatus = () => {
-    const opts = statusOptions[typeEl.value];
-    statusEl.innerHTML = opts
-      .map((s) => `<option ${item?.status === s ? "selected" : ""} value="${s}">${translateStatus(s)}</option>`)
-      .join("");
+    statusEl.innerHTML = statusOptions[typeEl.value].map((s) => `<option ${item?.status===s?"selected":""} value="${s}">${translateStatus(s)}</option>`).join("");
   };
-
   syncStatus();
   typeEl.onchange = syncStatus;
+
+  let selectedEmoji = emoji;
+  screens.add.querySelectorAll('.emoji-btn').forEach((btn) => {
+    btn.onclick = () => {
+      selectedEmoji = btn.dataset.emoji;
+      screens.add.querySelectorAll('.emoji-btn').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+    };
+  });
 
   document.getElementById("item-form").onsubmit = async (e) => {
     e.preventDefault();
     const form = new FormData(e.target);
-    const images = await filesToDataUrls(document.getElementById("images").files);
     const record = {
       id: item?.id || crypto.randomUUID(),
       title: form.get("title"),
@@ -331,77 +265,47 @@ function renderAddEdit(item = null) {
       type: form.get("type"),
       status: form.get("status"),
       launchDate: toISO(form.get("launchDate")),
-      purchaseDate: toISO(form.get("purchaseDate")),
+      purchaseDate: item?.purchaseDate || "",
       depositAmount: Number(form.get("depositAmount") || 0),
       finalAmount: Number(form.get("finalAmount") || 0),
       finalDueDate: toISO(form.get("finalDueDate")),
       shippingDate: toISO(form.get("shippingDate")),
       url: form.get("url"),
-      images: images.length ? images : item?.images || [],
+      images: item?.images || [],
       notes: form.get("notes"),
       createdAt: item?.createdAt || new Date().toISOString(),
+      emoji: selectedEmoji,
     };
-
     await ItemDB.put(record);
     state.editingId = null;
     await loadAndRender();
     switchScreen("list");
   };
 
-  if (isEdit) {
-    document.getElementById("cancel-edit").onclick = () => {
-      state.editingId = null;
-      switchScreen("list");
-    };
-  }
+  document.getElementById("cancel-edit").onclick = () => {
+    state.editingId = null;
+    switchScreen("home");
+  };
 }
 
-function toISO(v) {
-  return v ? new Date(v).toISOString() : "";
-}
-
-function filesToDataUrls(fileList) {
-  const files = Array.from(fileList || []);
-  return Promise.all(
-    files.map(
-      (file) =>
-        new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.readAsDataURL(file);
-        })
-    )
-  );
-}
+function toISO(v) { return v ? new Date(v).toISOString() : ""; }
 
 function openDetail(id) {
   const item = state.items.find((i) => i.id === id);
   if (!item) return;
-
   detailContent.innerHTML = `
-    <h3 class="section-title">${item.title}</h3>
+    <h3>${item.emoji || "📦"} ${item.title}</h3>
     ${ImageGallery(item.images)}
     <p><strong>商店：</strong>${item.store || "-"}</p>
-    <p><strong>類型：</strong>${translateType(item.type)}</p>
     <p><strong>狀態：</strong><span class="status-tag">${translateStatus(item.status)}</span></p>
-    <h4 class="sub-title">時間軸</h4>${Timeline(item)}
-    <h4 class="sub-title">金額資訊</h4>
-    <p>訂金：$${item.depositAmount || 0}</p>
-    <p>尾款：$${item.finalAmount || 0}</p>
-    <p>尾款截止：${fmt(item.finalDueDate)}</p>
-    <h4 class="sub-title">外部連結</h4>
-    <p>${item.url ? `<a href="${item.url}" target="_blank" rel="noopener">${item.url}</a>` : "未提供連結"}</p>
-    <h4 class="sub-title">備註</h4><p class="note-box">${item.notes || "-"}</p>
-    ${actionRow([clayButton("編輯", 'id="edit-item"')])}
+    <h4>時間軸</h4>${Timeline(item)}
+    <h4>金額</h4><p>訂金：NT$${item.depositAmount || 0} / 尾款：NT$${item.finalAmount || 0}</p>
+    <h4>連結</h4><p>${item.url ? `<a href="${item.url}" target="_blank" rel="noopener">${item.url}</a>` : "未提供連結"}</p>
+    <h4>備註</h4><p class="note-box">${item.notes || "-"}</p>
+    ${actionRow([clayButton("編輯", 'id="edit-item"'), clayButton("刪除", 'id="delete-item"')])}
   `;
-
-  detailContent.querySelector("#edit-item").onclick = () => {
-    detailModal.close();
-    state.editingId = item.id;
-    renderAddEdit(item);
-    switchScreen("add");
-  };
-
+  detailContent.querySelector("#edit-item").onclick = () => { detailModal.close(); state.editingId = id; switchScreen("add"); };
+  detailContent.querySelector("#delete-item").onclick = async () => { detailModal.close(); await deleteItem(id); };
   detailModal.showModal();
 }
 

@@ -1,15 +1,28 @@
-import { emptyHint, sectionTitle } from "./uiKit.js";
+import { emptyHint } from "./uiKit.js";
 
-export function DashboardCard(title, items) {
-  const card = document.createElement("article");
-  card.className = "card";
+export function DashboardCard(_title, items) {
+  const wrap = document.createElement("div");
+  wrap.className = "reminder-list";
 
-  const body = items.length
-    ? `<ul class="item-list">${items
-        .map((i) => `<li><strong>${i.title}</strong> · ${i.eventLabel} · ${i.dateLabel} <span class="meta">(${i.countdown})</span></li>`)
-        .join("")}</ul>`
-    : emptyHint("目前沒有項目。");
+  if (!items.length) {
+    wrap.innerHTML = emptyHint("目前沒有項目。");
+    return wrap;
+  }
 
-  card.innerHTML = `${sectionTitle(title)}${body}`;
-  return card;
+  wrap.innerHTML = items
+    .map(
+      (i) => `
+      <article class="reminder-item">
+        <div class="badge">${i.eventLabel === "尾款" ? "💰" : "🔥"}</div>
+        <div class="content">
+          <p class="title">${i.title}</p>
+          <p class="meta">${i.eventLabel}日期：${i.dateLabel}</p>
+        </div>
+        <span class="pill">${i.countdown}</span>
+      </article>
+    `
+    )
+    .join("");
+
+  return wrap;
 }
