@@ -1,4 +1,4 @@
-const SW_VERSION = "2026-03-25-08";
+const SW_VERSION = "2026-03-26-09";
 const SHELL_CACHE = `preorder-shell-${SW_VERSION}`;
 const RUNTIME_CACHE = `preorder-runtime-${SW_VERSION}`;
 
