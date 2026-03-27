@@ -98,12 +98,14 @@ const PAID_PREORDER_DEPOSIT_STATUSES = new Set([
   "received",
 ]);
 const PAID_PREORDER_FINAL_STATUSES = new Set(["paid", "waiting_shipment", "shipped", "received"]);
-const REMIND_DEPOSIT_STATUSES = new Set(["upcoming_sale", "ordered"]);
-const REMIND_FINAL_STATUSES = new Set(["ordered", "deposit_paid", "waiting_final_payment"]);
 const REMINDER_DAY_OFFSETS = [-3, -1, 0];
 const REMINDER_TAIPEI_TIME = { hour: 9, minute: 0 };
 const REMINDER_TZ = "Asia/Taipei";
-
+const REMINDER_EVENT_LABELS = {
+  launch: "開售",
+  deposit: "訂金",
+  final: "尾款",
+};
 const EMOJI_CHOICES = ["🎁", "🎮", "🧸", "📚", "🎧", "🧃", "🍰", "👟", "🧪", "🧴", "🧩", "🎀"];
 
 let deferredInstallPrompt = null;
@@ -369,16 +371,32 @@ function fmtTaipeiDate(value) {
   return date.toLocaleDateString("zh-TW", { timeZone: REMINDER_TZ });
 }
 
+function getTaipeiDateKey(value) {
+  const parts = getTaipeiDateParts(value);
+  if (!parts) return "";
+  return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
+}
+
 function buildReminderJobId(deviceId, itemId, eventType, dayOffset) {
   return `${deviceId}:${itemId}:${eventType}:${dayOffset}`;
 }
 
 function buildReminderJob(item, deviceId, eventType, dueDate, dayOffset) {
-  const triggerAt = toTaipeiMorningISO(dueDate, dayOffset);
+  let triggerAt = toTaipeiMorningISO(dueDate, dayOffset);
   if (!triggerAt) return null;
-  if (new Date(triggerAt).getTime() < Date.now()) return null;
 
-  const payType = eventType === "deposit" ? "訂金" : "尾款";
+  const triggerTime = new Date(triggerAt).getTime();
+  const now = Date.now();
+  if (triggerTime < now) {
+    // Catch-up once: if missed 09:00 but still same Taipei day, dispatch immediately.
+    if (getTaipeiDateKey(triggerAt) !== getTaipeiDateKey(new Date(now).toISOString())) {
+      return null;
+    }
+    triggerAt = new Date(now + 5000).toISOString();
+  }
+
+  const eventLabel = REMINDER_EVENT_LABELS[eventType] || "付款";
+
   return {
     jobId: buildReminderJobId(deviceId, item.id, eventType, dayOffset),
     deviceId,
@@ -388,8 +406,8 @@ function buildReminderJob(item, deviceId, eventType, dueDate, dayOffset) {
     dueDate,
     triggerAt,
     status: "scheduled",
-    title: `付款提醒：${item.title}`,
-    body: `${payType}將於 ${fmtTaipeiDate(dueDate)} 到期`,
+    title: `提醒：${item.title}`,
+    body: `${eventLabel}將於 ${fmtTaipeiDate(dueDate)} 到期`,
   };
 }
 
@@ -397,21 +415,19 @@ function buildPaymentReminderJobs(items, deviceId) {
   const jobs = [];
 
   for (const item of items) {
-    if (item.type !== "preorder") continue;
+    const dateEvents = [
+      ["launch", item.launchDate],
+      ["deposit", item.depositDueDate],
+      ["final", item.finalDueDate],
+    ];
 
-    if (REMIND_DEPOSIT_STATUSES.has(item.status) && item.depositDueDate) {
+    dateEvents.forEach(([eventType, dueDate]) => {
+      if (!dueDate) return;
       REMINDER_DAY_OFFSETS.forEach((offset) => {
-        const job = buildReminderJob(item, deviceId, "deposit", item.depositDueDate, offset);
+        const job = buildReminderJob(item, deviceId, eventType, dueDate, offset);
         if (job) jobs.push(job);
       });
-    }
-
-    if (REMIND_FINAL_STATUSES.has(item.status) && item.finalDueDate) {
-      REMINDER_DAY_OFFSETS.forEach((offset) => {
-        const job = buildReminderJob(item, deviceId, "final", item.finalDueDate, offset);
-        if (job) jobs.push(job);
-      });
-    }
+    });
   }
 
   return jobs;

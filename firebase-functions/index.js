@@ -121,12 +121,14 @@ exports.syncReminderJobs = onRequest(HTTP_OPTIONS, async (req, res) => {
   const incomingMap = new Map(normalized.map((job) => [job.jobId, job]));
 
   const existingSnapshot = await db.collection("reminder_jobs").where("deviceId", "==", deviceId).get();
+  const existingMap = new Map();
   const batch = db.batch();
   let upserted = 0;
   let removed = 0;
 
   existingSnapshot.forEach((doc) => {
     const data = doc.data() || {};
+    existingMap.set(doc.id, data);
     if (!incomingMap.has(doc.id) && !data.sentAt) {
       batch.delete(doc.ref);
       removed += 1;
@@ -135,11 +137,14 @@ exports.syncReminderJobs = onRequest(HTTP_OPTIONS, async (req, res) => {
 
   for (const [jobId, job] of incomingMap) {
     const ref = db.collection("reminder_jobs").doc(jobId);
+    const existing = existingMap.get(jobId);
+    const alreadySent = Boolean(existing?.sentAt);
     batch.set(
       ref,
       {
         ...job,
-        sentAt: null,
+        sentAt: alreadySent ? existing.sentAt : null,
+        status: alreadySent ? existing.status || JOB_STATUS.sent : JOB_STATUS.scheduled,
         updatedAt: FieldValue.serverTimestamp(),
       },
       { merge: true }
