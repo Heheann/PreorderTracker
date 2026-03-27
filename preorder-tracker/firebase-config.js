@@ -1,6 +1,9 @@
+// Stage A key rotation: replace this single value after creating `web-pwa-prod` browser key.
+const FIREBASE_BROWSER_API_KEY = "AIzaSyAUAuvOXvng3owvIPX-emIzRH63sSDSvi8";
+
 export const FIREBASE_WEB_CONFIG = {
   firebase: {
-    apiKey: "AIzaSyAUAuvOXvng3owvIPX-emIzRH63sSDSvi8",
+    apiKey: FIREBASE_BROWSER_API_KEY,
     authDomain: "heheprodect.firebaseapp.com",
     projectId: "heheprodect",
     storageBucket: "heheprodect.firebasestorage.app",
