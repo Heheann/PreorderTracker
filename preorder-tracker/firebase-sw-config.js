@@ -1,6 +1,6 @@
 // Keep this key in sync with `firebase-config.js`.
 // Stage A key rotation: replace this single value after creating `web-pwa-prod` browser key.
-const FIREBASE_BROWSER_API_KEY = "AIzaSyAUAuvOXvng3owvIPX-emIzRH63sSDSvi8";
+const FIREBASE_BROWSER_API_KEY = "AIzaSyDqbrsBTIwyqeULakIfyDbGnzKYBZydnAQ";
 
 self.FIREBASE_SW_CONFIG = {
   apiKey: FIREBASE_BROWSER_API_KEY,

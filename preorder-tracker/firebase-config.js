@@ -1,5 +1,5 @@
 // Stage A key rotation: replace this single value after creating `web-pwa-prod` browser key.
-const FIREBASE_BROWSER_API_KEY = "AIzaSyAUAuvOXvng3owvIPX-emIzRH63sSDSvi8";
+const FIREBASE_BROWSER_API_KEY = "AIzaSyDqbrsBTIwyqeULakIfyDbGnzKYBZydnAQ";
 
 export const FIREBASE_WEB_CONFIG = {
   firebase: {
